@@ -10,7 +10,7 @@ app.use(express.json())
 
 
 // /user/register route
-app.use('/user', require('./routes/register'));
+app.use('/user', require('./routes/routes'));
 
 
 

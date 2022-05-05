@@ -2,15 +2,24 @@
 const express = require('express');
 const app = express();
 
+//mongoose import
 const mongoose = require('mongoose')
 
+// md5 import
+const md5 = require('md5')
 
 //bcrypt
 const bcrypt = require('bcrypt');
 
-//model
+//User model
 const UserModel = require('../models/user');
 const User = UserModel;
+
+//token model
+const tokenModel = require('../models/token');
+
+//address model
+const addressModel = require('../models/address')
 
 
 
@@ -55,13 +64,60 @@ const loginUser = async (req, res) => {
     
     if (dbuser == null) {
         //user does not exist
-        res.send("User does not exists")
+        res.json({
+            message: "User does not exists"
+        })
     } else {
         // user exists
         bcrypt.compare(req.body.password, dbuser.password, async (err, result) => {
             if (err) return err;
             if(result) {
-                res.send("Login Success\n" + "Mongo Id is: " + dbuser._id)
+                const userExists = await tokenModel.findOne({user_id : bodyUsername});
+
+                if(userExists != null) {
+                    //user token already exists
+
+                    //get date from already existing token
+                    const createdAt = new Date(userExists.createdAt);
+                    const timeNow = new Date();
+
+                    //if already existing token's hours is greater than 1 then delete it
+                    if((createdAt.getHours()+1) <= timeNow.getHours()) {
+                        //delete old token
+                        let token_delete = await tokenModel.deleteOne({user_id: bodyUsername});
+                        res.json({
+                            token_status: "old Token deleted Login Again"
+                        })
+                    } else {
+                        res.json({
+                            login_status: "login Success",
+                            user_id: dbuser.username,
+                            token_status: "User Token already Exist",
+                            token: userExists.access_token,
+                            table_id: dbuser._id
+                            
+                        })
+                    }
+                    
+                } else {
+                    let randomNum = md5(Date());
+
+                    let token = await tokenModel.create({
+                        user_id : dbuser.username,
+                        access_token : randomNum
+                    
+                    })
+
+                    res.json({
+                        login_status: "login Success",
+                        user_id: dbuser.username,
+                        token_status: "Token Generated",
+                        token: token.access_token,
+                        table_id: dbuser._id
+                    })
+                }
+
+                
             } else {
                 
                 res.send("wrong password\n"+"Failed Login")
@@ -74,12 +130,27 @@ const loginUser = async (req, res) => {
 const returnUser = async (req, res) =>  {
     const accessToken = req.headers.accesstoken;
 
-    const dbUser = await User.findOne({_id : accessToken});
+    const tokendb = await tokenModel.findOne({access_token : accessToken})
 
-    if (dbUser == null) {
-        res.send("Invalid token")
+    if (tokendb == null)
+    {
+        res.json({
+            token : "invalid token"
+        })
     } else {
-        res.send(dbUser)
+        //find username in userdb
+        const dbUser = await User.findOne({username : await tokendb.user_id})
+
+        //find all the corresponding addresses in addressdb
+        const addresses = await addressModel
+                            .find({user_id : await tokendb.user_id})
+                            .populate("user_id");
+                            
+        //print user details and all the addresses
+        res.json({
+            dbUser : dbUser,
+            addresses : addresses
+        })
     }
 }
 
@@ -112,10 +183,38 @@ const getUserData = async (req, res) => {
     
 }
 
+const userAddress = async (req, res) => {
+    const tokenExists = await tokenModel.findOne({access_token : req.headers.accesstoken});
+
+    if (tokenExists == null)
+    {
+        res.json({
+            message: "invalid login token"
+        })
+    } else {
+        let dbusername = await tokenExists.user_id;
+        let address = await addressModel.create({
+            user_id: dbusername,
+            address: req.body.address,
+            city: req.body.city,
+            state: req.body.state,
+            pin_code: req.body.pin_code,
+            phone_no: req.body.phone_no
+        })
+
+        res.json({
+            message: "address updated",
+            address: address
+        })
+    }
+    
+}
+
 module.exports = {
     registerUser,
     loginUser,
     returnUser,
     deleteUser,
-    getUserData
+    getUserData,
+    userAddress
 };
