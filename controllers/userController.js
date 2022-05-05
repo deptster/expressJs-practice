@@ -156,16 +156,28 @@ const returnUser = async (req, res) =>  {
 
 const deleteUser = async (req, res) => {
 
-    let user_delete = await User.deleteOne({_id: req.headers.accesstoken});
-    if(user_delete.deletedCount == 0) {
-        res.status(500).json({
-            message: "User does not exist"
-        });
+    let find_token = await tokenModel.findOne({access_token: req.headers.accesstoken});
+
+    if(find_token == null) {
+        res.json({
+            token : "invalid token"
+        })
     } else {
-        res.status(200).json({
-            message: "User deleted"
+        let username = find_token.user_id;
+        //delete user
+        await User.deleteOne({username: username});
+        
+        //delete user addresses
+        await addressModel.deleteMany({user_id: username});
+
+        //delete token
+        await tokenModel.deleteOne({user_id: username});
+        
+        res.json({
+            message: "User & Addresses & Token deleted"
         });
-    }    
+        
+    }   
 
 }
 
