@@ -43,23 +43,9 @@ const tokenValidator = [
     }
 ]
 
-const addressValidator = [
-    check('address','address must not be empty').not().isEmpty(),
-    check('city','city must not be empty').not().isEmpty(),
-    check('state','state must not be empty').not().isEmpty(),
-    check('pin_code','pin code must not be empty').not().isEmpty(),
-    check('phone_no','phone no must not be empty').not().isEmpty(),
-    (req, res, next) => {
-        const errors = validationResult(req);
-        if (!errors.isEmpty())
-        return res.status(422).json({errors : errors.array()});
-        next();
-    }
-]
 
 module.exports = {
     userCreationValidator,
     loginValidator,
-    tokenValidator,
-    addressValidator
+    tokenValidator
 }

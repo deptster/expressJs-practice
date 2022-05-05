@@ -10,12 +10,10 @@ router.post('/register', validators.userCreationValidator, userController.regist
 
 router.post('/login', validators.loginValidator, userController.loginUser);
 
-router.get('/get/:id', validators.tokenValidator, userController.returnUser);
+router.get('/get', validators.tokenValidator, userController.returnUser);
 
 router.put('/delete', validators.tokenValidator, userController.deleteUser);
 
 router.get('/list/:page', userController.getUserData);
-
-router.post('/address', validators.tokenValidator, validators.addressValidator, userController.userAddress);
 
 module.exports = router;    
