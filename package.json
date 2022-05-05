@@ -1,0 +1,27 @@
+{
+  "name": "expressjs-practice",
+  "version": "1.0.0",
+  "description": "Training for Express JS",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "dotenv": "^16.0.0",
+    "express": "^4.18.0",
+    "express-validator": "^6.14.0",
+    "mongoose": "^6.3.1",
+    "nodemon": "^2.0.15"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deptster/expressJs-practice.git"
+  },
+  "bugs": {
+    "url": "https://github.com/deptster/expressJs-practice/issues"
+  },
+  "homepage": "https://github.com/deptster/expressJs-practice#readme"
+}
